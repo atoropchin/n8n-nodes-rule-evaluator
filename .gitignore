@@ -1,0 +1,20 @@
+# Dependencies
+node_modules/
+
+# Build artifacts
+*.tsbuildinfo
+dist/
+
+# Logs
+npm-debug.log*
+
+# OS / editor
+.DS_Store
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# Coverage
+coverage/
+.nyc_output/

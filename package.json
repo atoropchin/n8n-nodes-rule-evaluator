@@ -1,0 +1,48 @@
+{
+  "name": "n8n-nodes-rule-evaluator",
+  "version": "1.0.0",
+  "description": "Custom n8n node for evaluating business rules and policies",
+  "main": "dist/nodes/RuleEvaluator/RuleEvaluator.node.js",
+  "scripts": {
+    "build": "tsc && gulp --gulpfile gulpfile.mjs build:icons",
+    "dev": "tsc --watch",
+    "format": "prettier nodes/**/*.ts --write",
+    "lint": "eslint nodes/**/*.ts tests/**/*.mjs gulpfile.mjs",
+    "lint:n8n": "n8n-node lint",
+    "typecheck": "tsc --noEmit",
+    "test": "npm run build && node --test tests/*.test.mjs"
+  },
+  "keywords": [
+    "n8n-community-node-package",
+    "rules",
+    "dmn",
+    "decision",
+    "evaluator"
+  ],
+  "author": {
+    "name": "Andrey Toropchin",
+    "email": "a.s.toropchin@gmail.com"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/atoropchin/n8n-nodes-rule-evaluator.git"
+  },
+  "license": "MIT",
+  "n8n": {
+    "n8nNodesApiVersion": 1,
+    "credentials": [],
+    "nodes": [
+      "dist/nodes/RuleEvaluator/RuleEvaluator.node.js"
+    ]
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@n8n/node-cli": "^0.17.2",
+    "eslint": "^10.3.0",
+    "gulp": "^4.0.2",
+    "n8n-workflow": "^2.16.0",
+    "prettier": "^3.8.3",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.59.3"
+  }
+}
