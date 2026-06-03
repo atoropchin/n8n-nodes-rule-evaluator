@@ -12,7 +12,8 @@
     "declaration": true
   },
   "include": [
-    "nodes/**/*.ts"
+    "nodes/RuleEvaluator/**/*.ts",
+    "nodes/BusinessRules/**/*.ts"
   ],
   "exclude": [
     "node_modules",

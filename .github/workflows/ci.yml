@@ -19,7 +19,4 @@ jobs:
           cache-dependency-path: package-lock.json
 
       - run: npm ci
-      - run: npm run lint
-      - run: npm run typecheck
-      - run: npm run lint:n8n
-      - run: npm test
+      - run: npm run verify

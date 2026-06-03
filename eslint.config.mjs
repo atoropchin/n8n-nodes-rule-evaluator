@@ -10,4 +10,13 @@ export default tseslint.config(
 	{
 		files: ['nodes/**/*.ts'],
 	},
+	{
+		files: ['scripts/**/*.mjs'],
+		languageOptions: {
+			globals: {
+				console: 'readonly',
+				process: 'readonly',
+			},
+		},
+	},
 );

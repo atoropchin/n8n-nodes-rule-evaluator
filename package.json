@@ -1,21 +1,24 @@
 {
   "name": "n8n-nodes-rule-evaluator",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Custom n8n node for evaluating business rules and policies",
   "main": "dist/nodes/RuleEvaluator/RuleEvaluator.node.js",
   "scripts": {
-    "build": "tsc && gulp --gulpfile gulpfile.mjs build:icons",
+    "build": "rm -rf dist && tsc && gulp --gulpfile gulpfile.mjs build:icons",
     "dev": "tsc --watch",
-    "format": "prettier nodes/**/*.ts --write",
+    "format": "prettier nodes/**/*.ts tests/**/*.mjs --write",
+    "format:check": "prettier --check nodes/BusinessRules/BusinessRules.node.ts tests/business-rules.test.mjs tests/rule-evaluator.test.mjs package.json",
+    "check:scope": "node scripts/scope-guard.mjs",
     "lint": "eslint nodes/**/*.ts tests/**/*.mjs gulpfile.mjs",
     "lint:n8n": "n8n-node lint",
     "typecheck": "tsc --noEmit",
+    "verify": "npm run check:scope && npm run lint && npm run typecheck && npm run format:check && npm run lint:n8n && npm test",
+    "prepack": "npm run build",
     "test": "npm run build && node --test tests/*.test.mjs"
   },
   "keywords": [
     "n8n-community-node-package",
     "rules",
-    "dmn",
     "decision",
     "evaluator"
   ],
@@ -27,12 +30,25 @@
     "type": "git",
     "url": "https://github.com/atoropchin/n8n-nodes-rule-evaluator.git"
   },
+  "engines": {
+    "node": ">=18"
+  },
   "license": "MIT",
+  "files": [
+    "dist/**/*",
+    "README.md",
+    "docs/README.ru.md",
+    "docs/README.es.md",
+    "docs/README.zh.md",
+    "CHANGELOG.md",
+    "LICENSE"
+  ],
   "n8n": {
     "n8nNodesApiVersion": 1,
     "credentials": [],
     "nodes": [
-      "dist/nodes/RuleEvaluator/RuleEvaluator.node.js"
+      "dist/nodes/RuleEvaluator/RuleEvaluator.node.js",
+      "dist/nodes/BusinessRules/BusinessRules.node.js"
     ]
   },
   "devDependencies": {
