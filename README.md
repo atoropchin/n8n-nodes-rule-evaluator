@@ -2,148 +2,208 @@
 
 English | [Русский](./docs/README.ru.md) | [Español](./docs/README.es.md) | [中文](./docs/README.zh.md)
 
-[![npm version](https://img.shields.io/npm/v/n8n-nodes-rule-evaluator.svg)](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
-[![npm downloads](https://img.shields.io/npm/dw/n8n-nodes-rule-evaluator.svg)](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/atoropchin/n8n-nodes-rule-evaluator/blob/main/LICENSE)
+[npm version](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
+[npm downloads](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
+[License: MIT](https://github.com/atoropchin/n8n-nodes-rule-evaluator/blob/main/LICENSE)
+
+> Put your workflow rules in one node -- one place to edit policies.
 
 **n8n-nodes-rule-evaluator** is an n8n community node package for deterministic business-rule decisions.
 
-For each item it evaluates multiple rules using n8n's native condition UI, resolves conflicts with a fixed priority ladder, and writes one final decision to the output JSON.
+For each input item, it evaluates rule conditions, resolves conflicts using a fixed priority strategy (`Business Rules`) or a table hit policy (`Decision Table`), and routes the item to the resolved outcome.
 
-## Nodes in This Package
+## Before and after
 
-| Node | Role |
-| --- | --- |
-| **Business Rules** | Evaluates configured rules for each item and routes workflow execution to the output that matches the resolved decision.<br><br>Each rule assigns one of five outcomes: `allow`, `escalate`, `silent`, `deny`, or `error`.<br><br>When multiple rules match, outcomes are ranked on a fixed priority ladder (`allow` lowest → `error` highest); the highest-ranked outcome wins.<br><br>If no rule matches, the configured default decision applies. |
-| **Rule Enricher** | Legacy. Writes the decision to a configurable field (default `_decision`); add a `Switch` for routing. |
+**Before** -- policies scattered across the canvas:
+
+```
+[Trigger] -> [IF ...] -> [IF ...] -> [Switch] -> ...
+                |            |
+                v            v
+             [IF ...]    [Merge] -> ...
+```
+
+**After** -- rules consolidated into one node:
+
+```
+[Trigger] -> [Business Rules] -> (Allow / Escalate / Deny / ...)
+```
+
+Same item, same inputs; one place to edit when policies change.
+
+## In 15 seconds
+
+1. Drop **Business Rules** or **Decision Table** on the canvas.
+2. Add rules/cases with the native n8n condition UI.
+3. Connect outputs -- routing is built in.
+
+## What you get
+
+- **One node for many rules** -- all policies in one place.
+- **Built-in routing** -- no extra `Switch` for standard outcomes.
+- **Two decision patterns**:
+  - **Business Rules** (enum outcomes with a priority ladder)
+  - **Decision Table** (switchless table routing with hit policies)
+- **Legacy compatibility** -- **Rule Enricher** for existing workflows.
+
+## Nodes in this package
+
+- **Business Rules**: evaluate independent rules per item, resolve conflicts with a fixed priority ladder, and route to the resolved outcome.
+- **Decision Table**: switchless, table-based routing with user-defined string decisions and four hit policies: `Unique`, `First`, `Unanimous`, `Collect`.
+- **Rule Enricher**: legacy helper that writes the decision to a field (default `_decision`); you add a `Switch` for routing.
+
+## Which node should I use?
 
 
-## Quick Start
+|          | Business Rules                                 | Decision Table                                 |
+| -------- | ---------------------------------------------- | ---------------------------------------------- |
+| Shape    | Independent rules                              | Table rows (cases)                             |
+| Overlap  | Several rules can match                        | Cases are usually mutually exclusive           |
+| Outcomes | `allow`, `escalate`, `silent`, `deny`, `error` | Your own string decisions                      |
+| Routing  | Output routing by resolved enum outcome        | Switchless dynamic outputs based on hit policy |
 
-1. Install `n8n-nodes-rule-evaluator`.
-2. New workflows: add **Business Rules**. Existing workflows: keep **Rule Enricher** and a `Switch` on the output field.
-3. Set **Default Decision** for when no rule matches.
-4. Add rules with **Add Rule** (one IF-style condition per rule).
-5. Keep **Output Field Name** as `_decision` or choose your own.
 
-Example:
+Not sure? Start with **Business Rules**.
 
-- Rule 1: `amount > 500` → `allow`
-- Rule 2: `amount > 1000` → `silent`
-- Default Decision: `deny`
+### Business Rules
 
-For `amount = 1200`, the result is `silent` (see [Decision Priority](#decision-priority)).
+Use when you have **many independent checks** (several can be true at once) and you need **one final decision**.
 
-## How It Works
-
-For each input item:
-
-1. Evaluate every rule condition (n8n IF-style UI).
-2. Collect matched rule decisions.
-3. Pick the highest-priority match (see below).
-4. If nothing matched, use **Default Decision**.
-5. Write the result to **Output Field Name** (and route in **Business Rules**).
-
-**Rule Enricher** keeps a single output stream. **Business Rules** uses the same evaluation logic but sends each item to a dynamic output (`Allow`, `Deny`, etc.).
-
-## Decision Priority
-
-When more than one rule matches (low → high):
+Decision priority (low -> high):
 
 `allow` < `escalate` < `silent` < `deny` < `error`
 
-Examples: `silent` overrides `allow`; `deny` overrides `silent`; `error` overrides everything.
+If a rule condition fails to evaluate, the outcome is `error`.
 
-If a rule condition fails to evaluate, the decision is `error`.
+### Decision Table
 
-## Installation
+Use when your logic is **case-based**: each case combines several conditions (AND) and maps to a **string decision**.
 
-### Option 1: n8n UI
+Decision Table is **switchless**: it exposes dynamic outputs depending on `Hit Policy`.
 
-1. Open **Settings** → **Community Nodes** → **Install**.
-2. Enter package name: `n8n-nodes-rule-evaluator`.
-3. Approve installation and restart n8n if requested.
+Hit policies (all available in `1.2.x`):
 
-### Option 2: npm / Docker
+- `Unique` (default): no match -> default, one match -> case decision, 2+ matches -> runtime error
+- `First`: first matching case wins (top-to-bottom row order)
+- `Unanimous`: all matched cases must agree (otherwise runtime error)
+- `Collect`: gathers all matched case decisions into an array and routes to a single `decision` output
+
+## Quick Start
+
+Check out our [Workflow Examples](./docs/examples.md) to import these directly into your n8n canvas.
+
+### Try Business Rules
+
+Build a chat gate with built-in routing -- no IF chain before every reply.
+
+1. Add **When chat message received**, then **Business Rules**.
+2. Add Rule 1: `risk_score >= 80` -> `deny`
+3. Add Rule 2: `is_suspicious = true` -> `escalate`
+4. Set **Default Decision** to `allow`
+5. Wire outputs:
+  - **Allow** -> **Answer** (Send Message)
+  - **Escalate** -> **Request Approval** (Send and Wait) -> human approval
+  - **Deny** -> **Not Permitted** (Send Message)
+6. Run with `{ "risk_score": 50, "is_suspicious": true }` -> item exits **Escalate** (human review).
+
+```
+[When chat message received] -> [Business Rules] -- Allow -----> [Answer]
+                                    |-- Escalate -> [Request Approval] -> ...
+                                    +-- Deny -----> [Not Permitted]
+```
+
+### Try Decision Table
+
+1. Add the **Decision Table** node.
+2. Add Case 1: `status = "pending"` AND `days_open > 7` -> `escalate`
+3. Add Case 2: `status = "pending"` -> `wait`
+4. Set **Default Decision** to `closed`
+5. Set **Hit Policy** to `First` (top row wins when several cases match).
+6. Connect outputs and run with `{ "status": "pending", "days_open": 10 }` -> item exits as `escalate`.
+
+Both cases match, but `First` picks Case 1 because it is above Case 2. No code. Native n8n condition UI.
+
+For overlapping cases where order matters, use `First`. For conflict detection, use `Unanimous`.
+
+## Reference
+
+**Installation**
+
+**n8n UI**
+
+1. Settings -> Community Nodes -> Install
+2. Package name: `n8n-nodes-rule-evaluator`
+3. Restart n8n if prompted
+
+**npm / Docker**
 
 ```bash
 npm install n8n-nodes-rule-evaluator
 ```
 
-Then restart n8n.
+Restart n8n after install.
 
-## Node Parameters
+**Business Rules parameters**
 
-### Default Decision
 
-- Values: `allow`, `escalate`, `silent`, `deny`, `error`
-- Default: `deny`
-- Used when no business rule matches
+| Parameter             | Description                                                              |
+| --------------------- | ------------------------------------------------------------------------ |
+| Default Decision      | One of: `allow`, `escalate`, `silent`, `deny`, `error`. Default: `deny`. |
+| Rules                 | Fixed collection. Each rule: one IF-style condition and a **Decision**.  |
+| Output Field Name     | Field written to JSON. Default: `_decision`.                             |
+| Include Matched Rules | Adds `matched_rules` for debugging (ruleIndex and decision).             |
 
-### Business Rules (collection)
 
-- Fixed collection with **Add Rule**
-- Each rule: one IF-style condition (`maxConditions = 1`) and a **Decision**
+**Decision Table parameters**
 
-### Options
 
-- **Output Field Name**: string, default `_decision`
-- **Include Matched Rules**: boolean, default `false` — adds `matched_rules` with `ruleIndex` (1-based) and `decision`
+| Parameter            | Description                                                            |
+| -------------------- | ---------------------------------------------------------------------- |
+| Default Decision     | Used when no case matches.                                             |
+| Cases                | Each case: multiple conditions (AND) and a custom string **Decision**. |
+| Hit Policy           | `Unique` / `First` / `Unanimous` / `Collect`. Default: `Unique`.       |
+| Output Field Name    | Default: `_decision`.                                                  |
+| Include Matched Case | Debug: which case matched.                                             |
 
-## Output Examples
 
-### Basic
+**Output type for `{Output Field Name}`**:
 
-```json
-{
-  "sender_id": "ivan",
-  "amount": 1200,
-  "_decision": "silent"
-}
-```
+- `Unique` / `First` / `Unanimous`: `string`
+- `Collect`: `string[]` (array of matched decisions in case order)
 
-Rules: `amount > 500` → `allow`, `amount > 1000` → `silent`.
+**Rule Enricher (legacy)**
 
-### With Matched Rules
+Deprecated but supported for existing workflows.
 
-```json
-{
-  "sender_id": "ivan",
-  "amount": 1200,
-  "_decision": "silent",
-  "matched_rules": [
-    { "ruleIndex": 1, "decision": "allow" },
-    { "ruleIndex": 2, "decision": "silent" }
-  ]
-}
-```
+It writes the resolved decision to the configured output field (default `_decision`); you add a `Switch` node for routing.
 
-### No Rule Matched
+New workflows should use **Business Rules**.
+
+### Output example
 
 ```json
 {
-  "sender_id": "ivan",
-  "amount": 100,
-  "_decision": "deny"
+  "message": "Can you help with my order?",
+  "is_suspicious": true,
+  "risk_score": 50,
+  "_decision": "escalate"
 }
 ```
 
-(Default Decision was `deny`.)
+### Compatibility
 
-## Compatibility and Notes
-
-- Requires an n8n instance where community nodes can be installed. No credentials are required.
-- Package scope for `1.1.x`: **Business Rules** and **Rule Enricher** only.
-- **Rule Enricher** is deprecated but kept for backward compatibility; use **Business Rules** for new workflows.
+- **Requires n8n >= 1.0.0** (uses the modern Condition UI).
+- Any n8n instance with community nodes enabled. No credentials are required.
+- Package scope for `1.2.x`: **Decision Table**, **Business Rules**, and **Rule Enricher** (legacy).
 - One output item per input item; **Business Rules** routes each item to exactly one dynamic output.
 
-## Troubleshooting
+### Troubleshooting
 
-- **Unexpected `error`**: check rule expressions and mapped fields; unevaluable conditions become `error`.
-- **No rules matched**: verify item fields and **Default Decision**.
-- **Debug visibility**: enable **Include Matched Rules**.
+- Unexpected `error`: check expressions and mapped fields; unevaluable conditions become `error`.
+- No match: verify input fields and **Default Decision**.
+- Debug visibility: enable **Include Matched Rules** / **Include Matched Case**.
 
-## Testing and Development
+**Testing and development**
 
 ```bash
 npm test

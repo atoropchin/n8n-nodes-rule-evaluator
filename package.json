@@ -1,15 +1,15 @@
 {
   "name": "n8n-nodes-rule-evaluator",
-  "version": "1.1.0",
+  "version": "1.2.0",
   "description": "Custom n8n node for evaluating business rules and policies",
   "main": "dist/nodes/RuleEvaluator/RuleEvaluator.node.js",
   "scripts": {
-    "build": "rm -rf dist && tsc && gulp --gulpfile gulpfile.mjs build:icons",
+    "build": "rm -rf dist && tsc && node scripts/copy-icons.mjs",
     "dev": "tsc --watch",
-    "format": "prettier nodes/**/*.ts tests/**/*.mjs --write",
-    "format:check": "prettier --check nodes/BusinessRules/BusinessRules.node.ts tests/business-rules.test.mjs tests/rule-evaluator.test.mjs package.json",
+    "format": "prettier nodes/**/*.ts lib/**/*.ts tests/**/*.mjs --write",
+    "format:check": "prettier --check nodes/**/*.ts lib/**/*.ts tests/**/*.mjs package.json",
     "check:scope": "node scripts/scope-guard.mjs",
-    "lint": "eslint nodes/**/*.ts tests/**/*.mjs gulpfile.mjs",
+    "lint": "eslint nodes/**/*.ts tests/**/*.mjs scripts/**/*.mjs",
     "lint:n8n": "n8n-node lint",
     "typecheck": "tsc --noEmit",
     "verify": "npm run check:scope && npm run lint && npm run typecheck && npm run format:check && npm run lint:n8n && npm test",
@@ -48,14 +48,14 @@
     "credentials": [],
     "nodes": [
       "dist/nodes/RuleEvaluator/RuleEvaluator.node.js",
-      "dist/nodes/BusinessRules/BusinessRules.node.js"
+      "dist/nodes/BusinessRules/BusinessRules.node.js",
+      "dist/nodes/DecisionTable/DecisionTable.node.js"
     ]
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
     "@n8n/node-cli": "^0.17.2",
     "eslint": "^10.3.0",
-    "gulp": "^4.0.2",
     "n8n-workflow": "^2.16.0",
     "prettier": "^3.8.3",
     "typescript": "^6.0.3",

@@ -13,7 +13,9 @@
   },
   "include": [
     "nodes/RuleEvaluator/**/*.ts",
-    "nodes/BusinessRules/**/*.ts"
+    "nodes/BusinessRules/**/*.ts",
+    "nodes/DecisionTable/**/*.ts",
+    "lib/**/*.ts"
   ],
   "exclude": [
     "node_modules",

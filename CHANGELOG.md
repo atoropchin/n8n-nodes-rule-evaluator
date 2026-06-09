@@ -5,6 +5,24 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.2.0] - 2026-06-10
+
+### Added
+
+- New `Decision Table` node with switchless dynamic routing and user-defined decision strings.
+- Four hit policies in one release: `Unique` (default), `First`, `Unanimous`, `Collect`.
+- Decision-table engine layer in `lib/decision-table/` with policy registry and pure evaluators.
+- Shared runtime helpers in `lib/shared/` for filter evaluation, output-item construction, and safe errors.
+- `decision-table.test.mjs` suite for hit policies, dynamic outputs, parity checks, fallback behavior, and continue-on-fail coverage.
+- New `decision-table.svg` icon and package registration for `DecisionTable.node`.
+
+### Changed
+
+- Package version bumped to `1.2.0`.
+- Dynamic-output scope guard now allows Decision Table references starting from `1.2.x`.
+- Build and formatting configuration now includes `nodes/DecisionTable/**` and `lib/**`.
+- README and translated docs (RU/ES/ZH) now document the three-node lineup and when to choose each node.
+
 ## [1.1.0] - 2026-06-04
 
 ### Added
@@ -33,3 +51,4 @@ and this project follows [Semantic Versioning](https://semver.org/spec/v2.0.0.ht
 - Support for decision outcomes: `allow`, `escalate`, `silent`, `deny`, `error`.
 - Configurable output field for final decision (default `_decision`).
 - Optional matched-rules debug output via `includeMatchedRules`.
+

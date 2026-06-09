@@ -124,148 +124,140 @@ function getTechnicalErrorMessage(error: unknown): string {
   return "Technical error during node execution";
 }
 
-export class BusinessRules implements INodeType {
-  private resolveOutputField(
-    this: IExecuteFunctions,
-    itemIndex: number,
-  ): string {
-    const outputFieldRaw = this.getNodeParameter(
-      "options.outputFieldName",
-      itemIndex,
-      "_decision",
-    ) as string;
+function resolveOutputField(ctx: IExecuteFunctions, itemIndex: number): string {
+  const outputFieldRaw = ctx.getNodeParameter(
+    "options.outputFieldName",
+    itemIndex,
+    "_decision",
+  ) as string;
 
-    return outputFieldRaw.trim() || "_decision";
+  return outputFieldRaw.trim() || "_decision";
+}
+
+function createOutputItem(
+  item: INodeExecutionData,
+  itemIndex: number,
+  outputField: string,
+  decision: RuleDecision,
+  includeMatchedRules: boolean,
+  matchedRules: IMatchedRuleDebugInfo[],
+): INodeExecutionData {
+  const newItem: INodeExecutionData = {
+    json: {
+      ...item.json,
+      [outputField]: decision,
+    },
+    pairedItem: {
+      item: itemIndex,
+    },
+  };
+
+  if (includeMatchedRules) {
+    newItem.json.matched_rules = matchedRules;
   }
 
-  private createOutputItem(
-    item: INodeExecutionData,
-    itemIndex: number,
-    outputField: string,
-    decision: RuleDecision,
-    includeMatchedRules: boolean,
-    matchedRules: IMatchedRuleDebugInfo[],
-  ): INodeExecutionData {
-    const newItem: INodeExecutionData = {
-      json: {
-        ...item.json,
-        [outputField]: decision,
-      },
-      pairedItem: {
-        item: itemIndex,
-      },
-    };
-
-    if (includeMatchedRules) {
-      newItem.json.matched_rules = matchedRules;
-    }
-
-    if (item.binary !== undefined) {
-      newItem.binary = item.binary;
-    }
-
-    return newItem;
+  if (item.binary !== undefined) {
+    newItem.binary = item.binary;
   }
 
-  private evaluateItem(
-    this: IExecuteFunctions,
-    itemIndex: number,
-    item: INodeExecutionData,
-  ): IEvaluatedItemResult {
-    const outputField = BusinessRules.prototype.resolveOutputField.call(
-      this,
-      itemIndex,
-    );
-    const rulesData = this.getNodeParameter(
-      "rules.ruleBlock",
-      itemIndex,
-      [],
-    ) as IRuleBlock[];
-    const defaultDecision = this.getNodeParameter(
-      "defaultDecision",
-      itemIndex,
-    ) as RuleDecision;
-    const includeMatchedRules = this.getNodeParameter(
-      "options.includeMatchedRules",
-      itemIndex,
-      false,
-    ) as boolean;
+  return newItem;
+}
 
-    let highestPriority = 0;
-    let finalDecision: RuleDecision | "" = "";
-    const matchedRules: IMatchedRuleDebugInfo[] = [];
+function evaluateItem(
+  ctx: IExecuteFunctions,
+  itemIndex: number,
+  item: INodeExecutionData,
+): IEvaluatedItemResult {
+  const outputField = resolveOutputField(ctx, itemIndex);
+  const rulesData = ctx.getNodeParameter(
+    "rules.ruleBlock",
+    itemIndex,
+    [],
+  ) as IRuleBlock[];
+  const defaultDecision = ctx.getNodeParameter(
+    "defaultDecision",
+    itemIndex,
+  ) as RuleDecision;
+  const includeMatchedRules = ctx.getNodeParameter(
+    "options.includeMatchedRules",
+    itemIndex,
+    false,
+  ) as boolean;
 
-    if (!isRuleDecision(defaultDecision)) {
-      return {
-        outputField,
-        outputItem: BusinessRules.prototype.createOutputItem.call(
-          this,
-          item,
-          itemIndex,
-          outputField,
-          "error",
-          includeMatchedRules,
-          matchedRules,
-        ),
-      };
-    }
+  let highestPriority = 0;
+  let finalDecision: RuleDecision | null = null;
+  const matchedRules: IMatchedRuleDebugInfo[] = [];
 
-    for (const [ruleIndex, rule] of rulesData.entries()) {
-      let isMatch: boolean;
-      try {
-        isMatch = this.getNodeParameter(
-          `rules.ruleBlock[${ruleIndex}].condition`,
-          itemIndex,
-          false,
-          { extractValue: true },
-        ) as boolean;
-      } catch {
-        // Do not leak filter-evaluation details into item output.
-        finalDecision = "error";
-        break;
-      }
-
-      if (!isMatch) {
-        continue;
-      }
-
-      if (!isRuleDecision(rule.decision)) {
-        finalDecision = "error";
-        break;
-      }
-
-      if (includeMatchedRules) {
-        matchedRules.push({
-          ruleIndex: ruleIndex + 1,
-          decision: rule.decision,
-        });
-      }
-
-      const rulePriority = DECISION_PRIORITIES[rule.decision];
-      if (rulePriority > highestPriority) {
-        highestPriority = rulePriority;
-        finalDecision = rule.decision;
-      }
-    }
-
-    if (!finalDecision) {
-      finalDecision = defaultDecision;
-    }
-
+  if (!isRuleDecision(defaultDecision)) {
     return {
       outputField,
-      outputItem: BusinessRules.prototype.createOutputItem.call(
-        this,
+      outputItem: createOutputItem(
         item,
         itemIndex,
         outputField,
-        finalDecision,
+        "error",
         includeMatchedRules,
         matchedRules,
       ),
     };
   }
 
+  for (const [ruleIndex, rule] of rulesData.entries()) {
+    let isMatch: boolean;
+    try {
+      isMatch = ctx.getNodeParameter(
+        `rules.ruleBlock[${ruleIndex}].condition`,
+        itemIndex,
+        false,
+        { extractValue: true },
+      ) as boolean;
+    } catch {
+      // Do not leak filter-evaluation details into item output.
+      finalDecision = "error";
+      break;
+    }
+
+    if (!isMatch) {
+      continue;
+    }
+
+    if (!isRuleDecision(rule.decision)) {
+      finalDecision = "error";
+      break;
+    }
+
+    if (includeMatchedRules) {
+      matchedRules.push({
+        ruleIndex: ruleIndex + 1,
+        decision: rule.decision,
+      });
+    }
+
+    const rulePriority = DECISION_PRIORITIES[rule.decision];
+    if (rulePriority > highestPriority) {
+      highestPriority = rulePriority;
+      finalDecision = rule.decision;
+    }
+  }
+
+  if (finalDecision === null) {
+    finalDecision = defaultDecision;
+  }
+
+  return {
+    outputField,
+    outputItem: createOutputItem(
+      item,
+      itemIndex,
+      outputField,
+      finalDecision,
+      includeMatchedRules,
+      matchedRules,
+    ),
+  };
+}
+
+export class BusinessRules implements INodeType {
   description: INodeTypeDescription = {
     displayName: "Business Rules",
     name: "businessRules",
@@ -408,11 +400,7 @@ export class BusinessRules implements INodeType {
 
     for (let itemIndex = 0; itemIndex < items.length; itemIndex++) {
       try {
-        const evaluatedItem = BusinessRules.prototype.evaluateItem.call(
-          this,
-          itemIndex,
-          items[itemIndex],
-        );
+        const evaluatedItem = evaluateItem(this, itemIndex, items[itemIndex]);
         const outputField = evaluatedItem.outputField;
         const outputItem = evaluatedItem.outputItem;
         const evaluatedDecision = outputItem.json[outputField];
@@ -426,10 +414,7 @@ export class BusinessRules implements INodeType {
         if (this.continueOnFail()) {
           let outputField = "_decision";
           try {
-            outputField = BusinessRules.prototype.resolveOutputField.call(
-              this,
-              itemIndex,
-            );
+            outputField = resolveOutputField(this, itemIndex);
           } catch {
             // Fall back to `_decision` when output-field parameter resolution fails.
           }

@@ -12,6 +12,18 @@ const SCAN_PATHS = [
 ];
 const BLOCKED_PATTERN = /\b(DecisionTable|Decision Table|decisionTable|decision-table|decision table)\b/i;
 const EXTENSIONS = new Set(['.md', '.json', '.ts', '.mjs', '.js', '.yml', '.yaml']);
+const packageJson = JSON.parse(readFileSync(join(ROOT, 'package.json'), 'utf8'));
+const packageVersion = String(packageJson.version ?? '0.0.0');
+
+function isDecisionTableInScope(version) {
+	const [major = 0, minor = 0] = version.split('.').map((part) => Number.parseInt(part, 10));
+
+	if (!Number.isFinite(major) || !Number.isFinite(minor)) {
+		return false;
+	}
+
+	return major > 1 || (major === 1 && minor >= 2);
+}
 
 function shouldScanFile(filePath) {
 	for (const ext of EXTENSIONS) {
@@ -56,10 +68,11 @@ function walk(path) {
 
 const allFiles = SCAN_PATHS.flatMap((path) => walk(path)).filter((filePath) => shouldScanFile(filePath));
 const violations = [];
+const decisionTableInScope = isDecisionTableInScope(packageVersion);
 
 for (const filePath of allFiles) {
 	const content = readFileSync(join(ROOT, filePath), 'utf8');
-	if (BLOCKED_PATTERN.test(content)) {
+	if (!decisionTableInScope && BLOCKED_PATTERN.test(content)) {
 		violations.push(filePath);
 	}
 }
@@ -72,4 +85,8 @@ if (violations.length > 0) {
 	process.exit(1);
 }
 
-console.log('Scope check passed: no Decision Table references detected.');
+if (decisionTableInScope) {
+	console.log(`Scope check passed: Decision Table references are allowed in v${packageVersion}.`);
+} else {
+	console.log('Scope check passed: no Decision Table references detected.');
+}

@@ -549,3 +549,33 @@ test("business rules disables expressions for decision options", () => {
   );
   assert.equal(ruleDecisionProperty?.noDataExpression, true);
 });
+
+test("processes 1000 items without failure", async () => {
+  const node = new BusinessRules();
+  const items = Array.from({ length: 1000 }, (_, index) => ({
+    json: { id: index },
+  }));
+  const context = createMockContext({
+    items,
+    defaultDecision: "deny",
+    rulesData: [{ decision: "allow" }],
+    conditionResults: [true],
+  });
+
+  const startedAt = Date.now();
+  const buckets = await node.execute.call(context);
+  const elapsedMs = Date.now() - startedAt;
+
+  const routedCount = buckets.reduce(
+    (total, bucket) => total + bucket.length,
+    0,
+  );
+
+  assert.equal(routedCount, 1000);
+  assert.equal(buckets[0].length, 1000);
+  assert.equal(buckets[0][0].json._decision, "allow");
+  assert.ok(
+    elapsedMs < 5000,
+    `expected 1000-item batch under 5s, took ${elapsedMs}ms`,
+  );
+});
