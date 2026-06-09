@@ -6,7 +6,7 @@ You can copy the JSON code blocks below and paste them directly into your n8n ca
 
 ## Business Rules
 
-### Chat Gate with Approval Flow
+### Example: Chat Gate with Approval Flow
 
 This workflow demonstrates a chat gate with built-in routing. It evaluates rules and routes the message to:
 1. **Allow**: Immediately answers the user.
@@ -14,7 +14,7 @@ This workflow demonstrates a chat gate with built-in routing. It evaluates rules
 3. **Deny**: Rejects the request immediately.
 
 <details>
-  <summary><b>Show workflow JSON (copy & paste into n8n)</b></summary>
+  <summary><b>Show example workflow JSON (copy & paste into n8n)</b></summary>
 
   ```json
   {
@@ -269,7 +269,7 @@ This workflow demonstrates a chat gate with built-in routing. It evaluates rules
   ```
 </details>
 
-### E-commerce Refund Request
+### Example: E-commerce Refund Request
 
 This workflow models a "Refund Request" process where the **Business Rules** node acts as a central decision engine. It evaluates the request and routes it to one of five outcomes:
 
@@ -280,7 +280,7 @@ This workflow models a "Refund Request" process where the **Business Rules** nod
 5. **Error**: Something went wrong (e.g., calculation error), notify administrators.
 
 <details>
-  <summary><b>Show workflow JSON (copy & paste into n8n)</b></summary>
+  <summary><b>Show example workflow JSON (copy & paste into n8n)</b></summary>
 
   ```json
   {
@@ -535,7 +535,7 @@ This workflow models a "Refund Request" process where the **Business Rules** nod
 
 ## Decision Table
 
-### Ticket Routing (First Hit Policy)
+### Example: Ticket Routing (First Hit Policy)
 
 This workflow routes support tickets using a **Decision Table** with the `First` hit policy. When several cases match, the top row wins.
 
@@ -548,7 +548,7 @@ This workflow routes support tickets using a **Decision Table** with the `First`
 Both Case 1 and Case 2 can match a stale pending ticket, but `First` picks Case 1 because it is above Case 2.
 
 <details>
-  <summary><b>Show workflow JSON (copy & paste into n8n)</b></summary>
+  <summary><b>Show example workflow JSON (copy & paste into n8n)</b></summary>
 
   ```json
   {

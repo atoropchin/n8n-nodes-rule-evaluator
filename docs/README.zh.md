@@ -2,9 +2,9 @@
 
 [English](../README.md) | [Русский](./README.ru.md) | [Español](./README.es.md) | 中文
 
-[npm version](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
-[npm downloads](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
-[License: MIT](https://github.com/atoropchin/n8n-nodes-rule-evaluator/blob/main/LICENSE)
+[![npm version](https://img.shields.io/npm/v/n8n-nodes-rule-evaluator.svg)](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
+[![npm downloads](https://img.shields.io/npm/dw/n8n-nodes-rule-evaluator.svg)](https://www.npmjs.com/package/n8n-nodes-rule-evaluator)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://github.com/atoropchin/n8n-nodes-rule-evaluator/blob/main/LICENSE)
 
 > 把工作流规则集中在一个节点里——策略只在一处维护。
 
